@@ -1,0 +1,490 @@
+index.html => <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎤 Voice Sentiment Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            padding: 48px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #1f2937;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .recording-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        #recordBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 20px 48px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #recordBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        #recordBtn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        #recordBtn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        #recordBtn.recording {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0%, 100% {
+                box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+            }
+            50% {
+                box-shadow: 0 4px 25px rgba(239, 68, 68, 0.6);
+            }
+        }
+
+        .pulse {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse-dot 1.5s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.2);
+            }
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .recording-hint {
+            color: #ef4444;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #dc2626;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: center;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .results {
+            display: none;
+            animation: slide-up 0.5s ease;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .sentiment-card {
+            background: #f9fafb;
+            border: 3px solid;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .sentiment-card:hover {
+            transform: scale(1.02);
+        }
+
+        .sentiment-emoji {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+
+        .sentiment-text {
+            font-size: 2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        .sentiment-reason {
+            font-size: 1rem;
+            color: #4b5563;
+            font-style: italic;
+            line-height: 1.6;
+        }
+
+        .transcription-card {
+            background: #f3f4f6;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .transcription-title {
+            font-size: 1rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .transcription-text {
+            font-size: 1.1rem;
+            color: #1f2937;
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .info-section {
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 2px solid #e5e7eb;
+        }
+
+        .info-text {
+            color: #4b5563;
+            margin-bottom: 12px;
+        }
+
+        .info-list {
+            color: #6b7280;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+
+        .info-list li {
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 32px 24px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            #recordBtn {
+                padding: 16px 32px;
+                font-size: 1rem;
+            }
+
+            .sentiment-emoji {
+                font-size: 3rem;
+            }
+
+            .sentiment-text {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Voice Sentiment Agent</h1>
+        <p class="subtitle">Record your voice and discover its sentiment</p>
+        
+        <div class="recording-section">
+            <button id="recordBtn">
+                <span class="mic-icon">🎙️</span>
+                <span id="btnText">Start Recording</span>
+            </button>
+            
+            <p id="recordingHint" class="recording-hint" style="display: none;">
+                Click "Stop Recording" when you're done speaking
+            </p>
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+
+        <div id="results" class="results">
+            <div id="sentimentCard" class="sentiment-card">
+                <div id="sentimentEmoji" class="sentiment-emoji">😊</div>
+                <h2 id="sentimentText" class="sentiment-text">Positive</h2>
+                <p id="sentimentReason" class="sentiment-reason"></p>
+            </div>
+
+            <div id="transcriptionCard" class="transcription-card">
+                <h3 class="transcription-title">Transcription</h3>
+                <p id="transcriptionText" class="transcription-text"></p>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <p class="info-text"><strong>How it works:</strong></p>
+            <ol class="info-list">
+                <li>Click "Start Recording" and speak into your microphone</li>
+                <li>Click "Stop Recording" when finished</li>
+                <li>Your speech is transcribed using OpenAI Whisper</li>
+                <li>Google Gemini analyzes the sentiment and provides reasoning</li>
+                <li>View your sentiment result instantly!</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        const recordBtn = document.getElementById('recordBtn');
+        const btnText = document.getElementById('btnText');
+        const recordingHint = document.getElementById('recordingHint');
+        const errorMessage = document.getElementById('errorMessage');
+        const results = document.getElementById('results');
+        const sentimentCard = document.getElementById('sentimentCard');
+        const sentimentEmoji = document.getElementById('sentimentEmoji');
+        const sentimentText = document.getElementById('sentimentText');
+        const sentimentReason = document.getElementById('sentimentReason');
+        const transcriptionText = document.getElementById('transcriptionText');
+
+        recordBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                await startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+
+        async function startRecording() {
+            try {
+                hideError();
+                hideResults();
+                
+                // Request microphone access
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // Create MediaRecorder
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm'
+                });
+                
+                audioChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        audioChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = async () => {
+                    // Stop all tracks to release microphone
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // Create audio blob
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    
+                    // Send to backend
+                    await sendAudioToBackend(audioBlob);
+                };
+                
+                // Start recording
+                mediaRecorder.start();
+                isRecording = true;
+                
+                // Update UI
+                recordBtn.classList.add('recording');
+                btnText.innerHTML = '<span class="pulse"></span> Stop Recording';
+                recordingHint.style.display = 'block';
+                
+            } catch (err) {
+                console.error('Error accessing microphone:', err);
+                showError('Could not access microphone. Please allow microphone permissions.');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                
+                // Update UI
+                recordBtn.classList.remove('recording');
+                btnText.textContent = 'Start Recording';
+                recordingHint.style.display = 'none';
+            }
+        }
+
+        async function sendAudioToBackend(audioBlob) {
+            // Show processing state
+            recordBtn.disabled = true;
+            btnText.innerHTML = '<span class="spinner"></span> Processing...';
+            
+            try {
+                // Create FormData
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+                
+                // Send to backend
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to analyze sentiment');
+                }
+                
+                const data = await response.json();
+                
+                // Display results
+                displayResults(data);
+                
+            } catch (err) {
+                console.error('Error sending audio:', err);
+                showError(err.message || 'Failed to analyze sentiment. Please try again.');
+            } finally {
+                // Reset button
+                recordBtn.disabled = false;
+                btnText.innerHTML = '<span class="mic-icon">🎙️</span> Start Recording';
+            }
+        }
+
+        function displayResults(data) {
+            const { transcription, sentiment, reason } = data;
+            
+            // Update transcription
+            transcriptionText.textContent = `"${transcription || 'No speech detected'}"`;
+            
+            // Update sentiment
+            const sentimentData = getSentimentData(sentiment);
+            sentimentEmoji.textContent = sentimentData.emoji;
+            sentimentText.textContent = sentiment;
+            sentimentText.style.color = sentimentData.color;
+            sentimentCard.style.borderColor = sentimentData.color;
+            sentimentReason.textContent = reason || 'No reason provided.';
+            
+            // Show results
+            showResults();
+        }
+
+        function getSentimentData(sentiment) {
+            switch (sentiment) {
+                case 'Positive':
+                    return { emoji: '😊', color: '#10b981' };
+                case 'Negative':
+                    return { emoji: '😞', color: '#ef4444' };
+                case 'Neutral':
+                    return { emoji: '😐', color: '#6b7280' };
+                default:
+                    return { emoji: '😐', color: '#6b7280' };
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = `⚠️ ${message}`;
+            errorMessage.classList.add('show');
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+
+        function showResults() {
+            results.classList.add('show');
+        }
+
+        function hideResults() {
+            results.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
